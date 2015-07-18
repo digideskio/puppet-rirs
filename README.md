@@ -133,6 +133,13 @@ allocations, make sure you know the impact of generating so many rules in your
 application configurations.
 
 
+# Requirements
+
+The requirements are pretty minimal:
+* Standard Ruby environment.
+* Ability to connect to remote HTTP webservers to download latest data.
+
+
 # Development
 
 Contributions via the form of Pull Requests to improve existing logic or to
