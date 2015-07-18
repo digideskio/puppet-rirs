@@ -62,20 +62,72 @@ Return format of addresses is always IP/CIDR for both IPv4 and IPv6.
 ## Usage Examples
 
 You can call the rir_allocations function from inside your Puppet manifests and
-even iterate through them inside Puppet's DSL. This is an example of setting ip
-iptables rules that restrict traffic to SSH to apnic/nz IP addresses only:
+even iterate through them inside Puppet's DSL, or you can use it directly from
+ERB templates.
 
-    Example of iptables here
 
-Alternatively, it's possible to call the function directly from inside ERB
-templates. The following is an example of generating Apache mod_access_compat
-rules to restrict visitors to apnic/nz IP addresses only:
+This is an example of setting iptables rules that restrict traffic to SSH to
+New Zealand (APNIC/NZ) IPv6 addresses using the puppetlabs/firewall module 
+with ip6tables provider for Linux:
 
-   Example of ERB here.
+    # Use jethrocarr-rirs rir_allocations function to get an array of all IP
+    # addresses belonging to NZ IPv6 allocations and then create iptables
+    # rules for each of them accordingly.
+    #
+    # Note we use a old style interation (pre future parser) to ensure
+    # compatibility with Puppet 3 systems. In future when 4.x+ is standard we
+    # could rewite with a newer loop approach as per:
+    # https://docs.puppetlabs.com/puppet/latest/reference/lang_iteration.html
+
+    define s_firewall::ssh_ipv6 ($address = $title) {
+      firewall { "004 V6 Permit SSH ${address}":
+        provider => 'ip6tables',
+        proto    => 'tcp',
+        port     => '22',
+        source   => $address,
+        action   => 'accept',
+      }  
+    }
+
+    $ipv6_allocations = rir_allocations('apnic', 'ipv6', 'nz')
+    s_firewall::pre::ssh_ipv6 { $ipv6_allocations: }
+
+Note that due to the use of Puppet 3 compatible iterator, you'll need to rename
+`s_firewall::ssh_ipv6` to `yourmodule::yourclass::ssh_ipv6` as the
+definition has to be a child of the module/class that it's inside of - in the
+above example, it lives in `s_firewall/manifests/init.pp`.
+
+This example can also be a big performance hit to your first Puppet run since
+it has to create many hundreds of resources on the first run - the bigger the
+country the bigger the impact could end up beign
+
+
+
+If you want to provide the list of addresses to configuration files or scripts
+rather than using it to create Puppet resources, it's entirely possible to call
+the function directly from inside ERB templates. The following is an example of
+generating Apache `mod_access_compat` rules to restrict visitors from
+New Zealand (NZ) IPv4 and IPv6 addresses only.
+
+    <Location "/admin">
+      Order deny,allow
+      Deny from all
+
+      # Use the jethrocarr-rirs Puppet module functions to lookup the IP
+      # allocations from APNIC for New Zealand. This works better than the
+      # buggy mod_geoip module since it supports both IPv4 and IPv6 concurrently.
+
+      <% scope.function_rir_allocations(['apnic', 'ipv4', 'nz']).each do |ipv4| -%>
+        Allow from <%= ipv4 %>
+      <% end -%>
+      <% scope.function_rir_allocations(['apnic', 'ipv6', 'nz']).each do |ipv6| -%>
+        Allow from <%= ipv6 %>
+      <% end -%>
+    </Location>
 
 Remember the larger registries and countries can have thousands of address
 allocations, make sure you know the impact of generating so many rules in your
-systems.
+application configurations.
 
 
 # Development
