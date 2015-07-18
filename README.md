@@ -147,6 +147,9 @@ Automated testing contributions welcome, Puppet's documentation on doing tests
 with custom functions is a bit lacking and the default Puppet module creation
 stuff doesn't setup any useful tests other than ensuring it's valid Ruby.
 
+It would also be worth looking at some logic to merge continious IP ranges for
+countries to reduce the number of rules where possible.
+
 
 # Debugging
 
