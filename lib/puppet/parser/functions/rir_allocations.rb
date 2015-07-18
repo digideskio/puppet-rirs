@@ -31,7 +31,7 @@ module Puppet::Parser::Functions
     RIPE NCC  : Europe, the Middle East, and Central Asia
     ENDHEREDOC
 
-
+    
     # RIRs & their data
     rirs = { 'afrinic'  => 'http://ftp.afrinic.net/pub/stats/afrinic/delegated-afrinic-latest',
              'apnic'    => 'http://ftp.apnic.net/stats/apnic/delegated-apnic-latest',
@@ -173,7 +173,58 @@ module Puppet::Parser::Functions
            end
 
          end
-             
+ 
+
+         # If the NetAddr optional Gem is available, we can take advantage of
+         # it to consolidate consecutive IP ranges to dramatically reduce the
+         # number of output addresses - this in turn generally results in
+         # performance improvements when using the addresses to generate Puppet
+         # resources like firewall policies.
+         #
+         # We keep the gem as an optional, since there's no good way to
+         # automatically include third party Gems from custom Puppet functions
+         # plus there may be some sites that don't want anything other than
+         # standard Ruby.
+
+         begin
+           require 'netaddr'
+
+           # We need to create a CIDR object for each address in our array of
+           # processes records and then perform a merge by country.
+           debug("RIR: Performing a merge of the returned ranges per-country")
+
+           # IPv4
+           data_downloaded["ipv4"].each_key do |country|
+             data_cidrs = Array.new
+
+             data_downloaded["ipv4"][country].each do |address|
+               data_cidrs.push NetAddr::CIDR.create(address)
+             end
+
+             # Replace list extracted from the download with a new array
+             # of merged CIDR ranges.
+             data_downloaded["ipv4"][country] = NetAddr.merge(data_cidrs)
+           end
+
+           # IPv6
+           data_downloaded["ipv6"].each_key do |country|
+             data_cidrs = Array.new
+
+             data_downloaded["ipv6"][country].each do |address|
+               data_cidrs.push NetAddr::CIDR.create(address)
+             end
+
+             # Replace list extracted from the download with a new array
+             # of merged CIDR ranges.
+             data_downloaded["ipv6"][country] = NetAddr.merge(data_cidrs, :Short => true)
+           end
+              
+         rescue LoadError
+           notice("Recommendation: For much better performance, install Ruby gem NetAddr so consecutive ranges can be consolidated by rir_allocations")
+         end
+
+
+            
           # Write the new cache file
           begin
             debug("RIR: Writing to cache file at "+ cachefile)

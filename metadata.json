@@ -1,6 +1,6 @@
 {
   "name": "jethrocarr-rirs",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": "jethrocarr",
   "summary": "Provides functions that expose data from Regional Internet Registries",
   "license": "Apache-2.0",

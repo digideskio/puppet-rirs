@@ -1,7 +1,8 @@
 # puppet-rirs
 
 Provides custom Puppet functions that allow lookup of data provided by Regional
-Internet Registries such as IP allocations.
+Internet Registries such as IP allocations, useful for purposes like generating
+geographical IP Access Control Lists (essentially GeoIP rules).
 
 Currently we have the one function (rir_allocations) but additional functions
 or facts could always be added in future such as AS numbers if desired.
@@ -135,33 +136,57 @@ application configurations.
 
 # Requirements
 
-The requirements are pretty minimal:
+The minimum requirements are met by most systems:
 * Standard Ruby environment.
 * Ability to connect to remote HTTP webservers to download latest data.
+
+However a big performance improvement can be made by installing the netaddr
+third party Gem. This will slow down the initial run of the function
+considerably, but it performs a merge of all consecutive ranges returned
+per-country which means far smaller output being fed into Puppet resources or
+configuration files. For example, APNIC's entire v4 and v6 allocation is around
+33k records unmerged vs 24k when merged by country.
+
+If you're planning to use this function to generate resources such as iptables
+firewall policies, you almost certainly want to install netaddr:
+
+    gem install netaddr
+
+If the gem is not installed, the merge process is skipped over but a notice is
+added to the Puppet master logs reminding/recommending the installation of
+netaddr for everyone whom didn't read this README.md like you did. :-)
 
 
 # Development
 
-Contributions via the form of Pull Requests to improve existing logic or to
-add other useful functions/facts that expose data from RIRs which would be
-useful when doing automated configuration.
+Contributions via the form of Pull Requests is always welcome!
 
-Pulling AS numbers could potentially be useful at some point for people running
-networks.
+## Nice to have features
 
-It is important not to break the existing parameter options and output of
-existing functions due to impact it could have on systems, please keep this in
-mind when filing PRs.
+General improvements to existing logic are always good, but additional
+functions or facts relating to RIR-sourced data is also welcome. Some ideas:
 
-Automated testing contributions welcome, Puppet's documentation on doing tests
-with custom functions is a bit lacking and the default Puppet module creation
-stuff doesn't setup any useful tests other than ensuring it's valid Ruby.
+1. Pulling AS numbers could potentially be useful at some point for people
+   running networks.
 
-It would also be worth looking at some logic to merge continious IP ranges for
-countries to reduce the number of rules where possible.
+2. Automated testing contributions welcome, Puppet's documentation on doing
+   tests with custom functions is a bit lacking and the default Puppet module
+   creation stuff doesn't setup any useful tests other than ensuring it's valid
+   Ruby.
 
 
-# Debugging
+Just remember that:
+
+1. It is important not to break the existing parameter options and output of
+   existing functions due to impact it could have on systems, please keep this
+   in mind when filing PRs.
+
+2. The use of third party Gems must have a graceful fall-back if they are not
+   available on the user's environment. Puppet won't automatically install
+   dependencies for them sadly.
+
+
+## Debugging
 
 Remember that custom Puppet functions execute on the master/server, not the
 local server. This means that:
@@ -172,7 +197,16 @@ different RIR servers to download the latest data.
 2. Errors and debug log messages might only appear on the master.
 
 If Puppet is run with --debug it exposes additional debug messages from the RIR
-functions.
+functions, useful if debugging timeout issues, etc.
+
+    Debug: Scope(Class[main]): RIR: Processing data for RIR apnic
+    Debug: Scope(Class[main]): RIR: Downloading latest data... http://ftp.apnic.net/stats/apnic/delegated-apnic-latest
+    Debug: Scope(Class[main]): RIR: Performing a merge of the returned ranges per-country
+    Debug: Scope(Class[main]): RIR: Writing to cache file at /tmp/.puppet_rir_allocations_apnic.yaml
+    Debug: Scope(Class[main]): RIR: RIR data processed, returning results
+    Debug: Scope(Class[main]): RIR: Processing data for RIR apnic
+    Debug: Scope(Class[main]): RIR: Loading RIR data from cachefile /tmp/.puppet_rir_allocations_apnic.yaml...
+    Debug: Scope(Class[main]): RIR: RIR data processed, returning results
 
 
 # License
