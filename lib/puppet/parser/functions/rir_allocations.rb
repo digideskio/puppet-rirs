@@ -42,7 +42,7 @@ module Puppet::Parser::Functions
 
     # Make sure an RIR is selected (Mandatory) and that it is valid.
     unless args[0] == nil
-      selected_rir = args[0]
+      selected_rir = args[0].downcase
 
       if rirs[selected_rir] == nil
         raise Puppet::ParseError, 'You must select an RIR to return ranges for EG: rir_allocations(\'apnic\', \'ipv6\')'
@@ -52,7 +52,7 @@ module Puppet::Parser::Functions
     end
 
     unless args[1] == nil
-      selected_inet = args[1]
+      selected_inet = args[1].downcase
 
       if selected_inet != 'ipv4' and selected_inet != 'ipv6'
         raise Puppet::ParseError, 'You must select either IPv4 or IPv6 to return ranges for EG: rir_allocations(\'apnic\', \'ipv6\')'
@@ -62,10 +62,10 @@ module Puppet::Parser::Functions
     end
 
     unless args[2] == nil
-      selected_country = args[2]
+      selected_country = args[2].upcase
       
       unless selected_country.match(/^[A-Z]{2}$/)
-        raise Puppet::ParseError, 'Country is optional and must be a 2char upper case code. EG: rir_allocations(\'apnic\', \'ipv6\'. \'NZ\')'
+        raise Puppet::ParseError, 'Country is optional and must be a 2char upper case code. EG: rir_allocations(\'apnic\', \'ipv6\', \'NZ\')'
       end
     else
       # Country is the only optional
