@@ -66,6 +66,8 @@ even iterate through them inside Puppet's DSL, or you can use it directly from
 ERB templates.
 
 
+### Usage in Puppet Resources
+
 This is an example of setting iptables rules that restrict traffic to SSH to
 New Zealand (APNIC/NZ) IPv6 addresses using the puppetlabs/firewall module 
 with ip6tables provider for Linux:
@@ -102,12 +104,13 @@ it has to create many hundreds of resources on the first run - the bigger the
 country the bigger the impact could end up beign
 
 
+### Usage in Puppet ERB Templates
 
 If you want to provide the list of addresses to configuration files or scripts
 rather than using it to create Puppet resources, it's entirely possible to call
 the function directly from inside ERB templates. The following is an example of
 generating Apache `mod_access_compat` rules to restrict visitors from
-New Zealand (NZ) IPv4 and IPv6 addresses only.
+New Zealand (APNIC/NZ) IPv4 and IPv6 addresses only.
 
     <Location "/admin">
       Order deny,allow
