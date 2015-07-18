@@ -101,7 +101,7 @@ above example, it lives in `s_firewall/manifests/init.pp`.
 
 This example can also be a big performance hit to your first Puppet run since
 it has to create many hundreds of resources on the first run - the bigger the
-country the bigger the impact could end up beign
+country the bigger the impact could end up being.
 
 
 ### Usage in Puppet ERB Templates
