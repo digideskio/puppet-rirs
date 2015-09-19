@@ -100,9 +100,14 @@ Note that due to the use of Puppet 3 compatible iterator, you'll need to rename
 definition has to be a child of the module/class that it's inside of - in the
 above example, it lives in `s_firewall/manifests/init.pp`.
 
-This example can also be a big performance hit to your first Puppet run since
-it has to create many hundreds of resources on the first run - the bigger the
-country the bigger the impact could end up being.
+This example isn't the best, since the [puppetlabs-firewall](https://github.com/puppetlabs/puppetlabs-firewall)
+module is extremely inefficent and can take hours to generate a large GeoIP
+ruleset on a small server.
+
+If you run into this sort of issue, my companion module
+[jethrocarr-speedychains](https://github.com/jethrocarr/puppet-speedychains#geoip-example)
+offers a solution that works nicely with this module to generate thousands of
+lines of rules in just seconds.
 
 
 ### Usage in Puppet ERB Templates
